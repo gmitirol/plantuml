@@ -1,0 +1,79 @@
+before_script:
+  - cp $CI_SERVER_TLS_CA_FILE /usr/local/share/ca-certificates/
+  - update-ca-certificates
+
+cache: &cache
+  untracked: false
+
+.tags-defaults-docker: &tags-defaults-docker
+  - shared
+
+variables:
+  TEMP_IMAGE: ci-build/$CI_PROJECT_PATH:$CI_PIPELINE_ID
+  TEMP_IMAGE_PATH: build/image.tar
+  VERSION_TOOL_REPOSITORY: https://github.com/xelan/bash-version-tool.git
+
+stages:
+  - build
+  - test
+  - release
+
+build:
+  stage: build
+  image: docker:latest
+  cache:
+    <<: *cache
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - $TEMP_IMAGE_PATH
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build --tag $TEMP_IMAGE . --build-arg CI_REGISTRY=$CI_REGISTRY
+    - mkdir -p build
+    - docker save --output $TEMP_IMAGE_PATH $TEMP_IMAGE
+  tags: *tags-defaults-docker
+
+test:
+  stage: test
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  script:
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - CONTAINER=$(docker run -d  $TEMP_IMAGE)
+    - sleep 3
+    - docker exec $CONTAINER sudo -u project -H /home/project/tomcat/bin/catalina.sh version
+    - docker exec $CONTAINER wget 'http://localhost:8080/plantuml/png/U9nJK73AJrBGjLDmpCbCJbMmKl18pSd9vrA0ye4I87ahXO2SnBoIK5yVXSnYXSJorEByt5Gk0Fki4Qy0'
+    - docker kill $CONTAINER
+  tags: *tags-defaults-docker
+
+release:
+  stage: release
+  image: docker:latest
+  services:
+    - name: $CI_REGISTRY/docker/dind:latest
+      alias: docker
+  only:
+    - /^[0-9]+\.[0-9]+\.[0-9]$/
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker load --input $TEMP_IMAGE_PATH --quiet
+    - docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - apk add --no-cache bash git;
+      git clone "$VERSION_TOOL_REPOSITORY" /tmp/version;
+      VERSIONS="$(git tag --list)";
+      MAJOR=$(bash /tmp/version/version.sh $CI_COMMIT_REF_NAME MAJOR);
+      if [ -z "$VERSIONS" ] || [ $(bash /tmp/version/versionhighest.sh "$VERSIONS" $CI_COMMIT_REF_NAME) == 'YES' ]; then
+        docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:latest;
+      fi;
+      VERSIONS_MAJOR=$(echo "$VERSIONS" | grep -E "^$MAJOR\." || echo '');
+      if [ -z "$VERSIONS_MAJOR" ] || [ $(bash /tmp/version/versionhighest.sh "$VERSIONS_MAJOR" $CI_COMMIT_REF_NAME) == 'YES' ]; then
+        docker tag $TEMP_IMAGE $CI_REGISTRY_IMAGE:v$MAJOR;
+      fi;
+    - docker push $CI_REGISTRY_IMAGE
+  tags: *tags-defaults-docker
