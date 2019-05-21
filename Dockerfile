@@ -1,6 +1,9 @@
 ARG REGISTRY_PATH=gmitirol
-FROM $REGISTRY_PATH/alpine39:1.1.1
+FROM $REGISTRY_PATH/alpine39:v1
 LABEL maintainer="gmi-edv@i-med.ac.at"
+
+ARG PLANTUML_VERSION="v1.2019.5"
+ARG TOMCAT_VERSION="9.0.20"
 
 RUN set -xe && \
     BUILDDIR='/root/build' && \
@@ -13,12 +16,12 @@ RUN set -xe && \
     cd "$BUILDDIR" && \
     git clone 'https://github.com/plantuml/plantuml-server.git' && \
     cd plantuml-server && \
-    git checkout 'v1.2019.5' && \
+    git checkout "$PLANTUML_VERSION" && \
     mvn package && \
     cd "$BUILDDIR" && \
-    wget 'https://www-eu.apache.org/dist/tomcat/tomcat-9/v9.0.20/bin/apache-tomcat-9.0.20.tar.gz' && \
-    tar xzf 'apache-tomcat-9.0.20.tar.gz' && \
-    mv 'apache-tomcat-9.0.20' /home/project/tomcat && \
+    wget "https://www-eu.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz" && \
+    tar xzf "apache-tomcat-${TOMCAT_VERSION}.tar.gz" && \
+    mv "apache-tomcat-${TOMCAT_VERSION}" /home/project/tomcat && \
     cp plantuml-server/target/plantuml.war  /home/project/tomcat/webapps/plantuml.war && \
     echo '<html><head><meta charset="utf-8" /><title>PlantUML Server</title></head><body></body></html>' > /home/project/tomcat/webapps/ROOT/index.html && \
     chown -R project:project /home/project/ && \
