@@ -32,7 +32,7 @@ build:
       alias: docker
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build --tag $TEMP_IMAGE . --build-arg CI_REGISTRY=$CI_REGISTRY
+    - docker build --tag $TEMP_IMAGE . --build-arg REGISTRY_PATH=$CI_REGISTRY/docker
     - mkdir -p build
     - docker save --output $TEMP_IMAGE_PATH $TEMP_IMAGE
   tags: *tags-defaults-docker
