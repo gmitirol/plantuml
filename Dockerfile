@@ -3,7 +3,7 @@ FROM $REGISTRY_PATH/alpine311:v1
 LABEL maintainer="gmi-edv@i-med.ac.at"
 
 ARG PLANTUML_VERSION="v1.2020.1"
-ARG TOMCAT_VERSION="9.0.31"
+ARG TOMCAT_VERSION="9.0.34"
 
 RUN set -xe && \
     BUILDDIR='/root/build' && \
