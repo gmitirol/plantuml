@@ -2,7 +2,7 @@ ARG REGISTRY_PATH=gmitirol
 FROM $REGISTRY_PATH/alpine312:v1
 LABEL maintainer="gmi-edv@i-med.ac.at"
 
-ARG PLANTUML_VERSION="v1.2020.16"
+ARG PLANTUML_VERSION="v1.2020.18"
 ARG TOMCAT_VERSION="9.0.38"
 
 RUN set -xe && \
