@@ -9,7 +9,7 @@ RUN set -xe && \
     BUILDDIR='/root/build' && \
     adduser -u 1000 -D project && \
     apk --no-cache --update upgrade && \
-    apk add --no-cache --update sudo graphviz openjdk8 maven fontconfig fontconfig-dev msttcorefonts-installer && \
+    apk add --no-cache --update sudo graphviz openjdk8 maven fontconfig fontconfig-dev msttcorefonts-installer ttf-dejavu && \
     update-ms-fonts && \
     fc-cache -f && \
     mkdir "$BUILDDIR" && \
