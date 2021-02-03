@@ -2,8 +2,8 @@ ARG REGISTRY_PATH=gmitirol
 FROM $REGISTRY_PATH/alpine312:v1
 LABEL maintainer="gmi-edv@i-med.ac.at"
 
-ARG PLANTUML_VERSION="v1.2020.22"
-ARG TOMCAT_VERSION="9.0.41"
+ARG PLANTUML_VERSION="v1.2021.1"
+ARG TOMCAT_VERSION="9.0.43"
 
 RUN set -xe && \
     BUILDDIR='/root/build' && \
